@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400&display=swap');
+
+body, h1, p, div {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page-center {
+  display: flex;
+  justify-content: center;
+}
+
+.app-wrapper {
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* background-color: pink; */
+  max-width: 700px;
+}
+
+.flex-row {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 0.25rem;
+}
+
+.day-tile {
+  width: 6rem;
+  background-color: white;
+  padding-top: 0.75rem;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 1px 1px 1px #dbdbdb;
+}
+
+.day-tile-day {
+  font-size: 1.05rem;
+  /* font-weight: bold; */
+}
+
+.day-tile-emoji {
+  font-size: 2.75rem;
+}
+
+.focus-day-section {
+  background-color: white;
+  width: 100%;
+  height: 75px;
+  display: flex;
+}
+
+.focus-day-temp-switcher {
+  margin-top: 0.75rem;
+  margin-left: 5px;
+  display: flex;
+  gap: 4px;
+  font-size: 1.15rem;
+}
+
+.focus-day-temp-switcher > p {
+  cursor: pointer;
+  height: 1.25rem;
+}
+
+.focus-day-temp-switcher > span {
+  border-left: solid 1px #70757A;
+  height: 1.25rem;
+}
+
+.focus-day-section > p:nth-child(2) {
+  font-size: 3rem;
+  font-weight: 400;
+  font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+}
+
+.focus-day-emoji {
+  font-size: 3.25rem;
+}
+
+.focus-day-more-details {
+  margin-top: 0.6rem;
+  margin-left: 10px;
+  font-size: 0.75rem;
+  color: #70757A;
+}
+
+.focus-day-summary {
+  margin-left: auto;
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+.focus-day-summary :first-child {
+  font-weight: 400;
+  font-size: 1.375rem;
+}
+
+.focus-day-summary > p:not(:first-child) {
+  color: #70757A;
+}
+
+.hourly-temp-section {
+  /* background-color: greenyellow; */
+  width: 100%;
+  height: 200px;
+  padding: 1rem 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-right: 1px solid #b6bcc4;
+  border-bottom: 1px solid #b6bcc4;
+  border-radius: 15px;
+  margin-bottom: 0.25rem;
+}
+
+.hourly-temp-section > p:first-child {
+  font-weight: bold;
+}
+
+.days-summary-section {
+  background-color: white;
+  width: 100%;
+  height: 120px;
+}
