@@ -92,6 +92,16 @@ function App() {
   };
 
   const [forecastData, setForecastData] = useState<APIData[]>([]);
+  const [locationData, setLocationData] = useState<{
+    name: string;
+    region: string;
+    country: string;
+    lat: number;
+    lon: number;
+    tz_id: string;
+    localtime_epoch: number;
+    localtime: string;
+  }>();
   const [dateObjectAtStartUp, setDateObjectAtStartUp] = useState<Date>();
   const [todaysDateInLondon, setTodaysDateInLondon] = useState<string>("");
   const [todayDayName, setTodayDayName] = useState<string>("");
@@ -130,27 +140,25 @@ function App() {
     const d = new Date(date);
     const dayName = dateObjectAtStartUp
       ? days[dateObjectAtStartUp.getDay()]
-      : "Wait";
+      : "Loading";
     return dayName;
   };
 
-  useEffect(() => {
-    const forecastDataForToday = async () => {
-      const res = await fetch(
-        `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=London&days=7&aqi=no&alerts=no`,
-        {
-          method: "GET",
-          headers: {
-            "content-type": "application/json;charset=UTF-8",
-          },
-        }
-      );
-      const data = await res.json();
-      setForecastData(data.forecast.forecastday);
-      console.log(data);
-    };
-    forecastDataForToday();
-  }, []);
+  const getForecastDataForLocation = async (lat: number, lon: number) => {
+    const res = await fetch(
+      `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=7&aqi=no&alerts=no`,
+      {
+        method: "GET",
+        headers: {
+          "content-type": "application/json;charset=UTF-8",
+        },
+      }
+    );
+    const data = await res.json();
+    setLocationData(data.location);
+    setForecastData(data.forecast.forecastday);
+    console.log(data);
+  };
 
   const emojis = {
     cloudy: "☁️",
@@ -314,8 +322,94 @@ function App() {
   });
   // console.log(daysWeather)
 
+  const [locationNameSearchString, setLocationNameSearchString] =
+    useState<string>("");
+
+  type searchSuggestionResultsType = {
+    id: number;
+    name: string;
+    region: string;
+    country: string;
+    lat: number;
+    lon: number;
+    url: string;
+  };
+
+  const [searchSuggestionResults, setSearchSuggestionResults] = useState<
+    searchSuggestionResultsType[]
+  >([]);
+
+  useEffect(() => {
+    const autoCompleteSuggestions = async (str: string) => {
+      const res = await fetch(
+        `https://api.weatherapi.com/v1/search.json?key=${API_KEY}&q=${str}`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json;charset=UTF-8",
+          },
+        }
+      );
+      const data = await res.json();
+      setSearchSuggestionResults(data);
+    };
+    autoCompleteSuggestions(locationNameSearchString);
+  }, [locationNameSearchString]);
+  // console.log(searchSuggestionResults);
+
+  const [autoGeoFind, setAutoGeoFind] = useState<string>('');
+
+  function geoFindDeviceLocation() {
+    function success(position: { coords: { latitude: number; longitude: number; }; }) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      setAutoGeoFind("");
+      getForecastDataForLocation(latitude, longitude);
+      setLocationNameSearchString("");
+    }
+  
+    function error() {
+      setAutoGeoFind("Unable to retrieve your location");
+    }
+  
+    if (!navigator.geolocation) {
+      setAutoGeoFind("Geolocation is not supported by your browser");
+    } else {
+      setAutoGeoFind("Locating…");
+      navigator.geolocation.getCurrentPosition(success, error);
+    }
+  }
+  
   return (
     <div className="page-center">
+      <div className="location-search-container">
+        <button className="blank-btn" onClick={geoFindDeviceLocation}>Auto</button>
+        {autoGeoFind ? <p className="auto-geo-find-status"></p> : null}
+      <input
+        type="text"
+        value={locationNameSearchString}
+        onChange={(e) => {
+          setLocationNameSearchString(e.target.value);
+        }}
+      />
+      {searchSuggestionResults.length > 0
+        ? <div className="auto-complete-search-results-btns-container">{searchSuggestionResults.map((item: searchSuggestionResultsType) => {
+            return (
+              <button
+                key={item.id}
+                className="blank-btn"
+                onClick={() => {
+                  getForecastDataForLocation(item.lat, item.lon);
+                  setLocationNameSearchString("");
+                }}
+              >
+                {item.name ? `${item.name}, ` : null}
+                {item.region ? `${item.region}, ` : null}
+                {item.country ? `${item.country}` : null}
+              </button>
+            );
+          })}</div>
+        : null}</div>
       {forecastData.length !== 0 ? (
         <div className="app-wrapper">
           <div className="focus-day-section">
@@ -351,8 +445,14 @@ function App() {
               </p>
             </div>
             <div className="focus-day-more-details">
-              <p>Chance of rain: {forecastData[currentDataIndex].day.daily_chance_of_rain}%</p>
-              <p>Chance of snow: {forecastData[currentDataIndex].day.daily_chance_of_snow}%</p>
+              <p>
+                Chance of rain:{" "}
+                {forecastData[currentDataIndex].day.daily_chance_of_rain}%
+              </p>
+              <p>
+                Chance of snow:{" "}
+                {forecastData[currentDataIndex].day.daily_chance_of_snow}%
+              </p>
               <p>
                 Wind:{" "}
                 {isUseCelcius
@@ -379,7 +479,7 @@ function App() {
                 : null}
             </div>
             <div className="focus-day-summary">
-              <p>{}</p>
+              <p>{locationData ? locationData.name : "Weather"}</p>
               <p>
                 {dayName} {dayHour}:00 {amPm}
               </p>
