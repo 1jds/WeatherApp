@@ -1,107 +1,12 @@
-import React from "react";
 import { useEffect, useState } from "react";
-// import forecastData from "./data/forecastData.ts";
 import "./index.css";
+import LocationWeather from "./components/LocationWeather";
 const API_KEY = import.meta.env.VITE_APP_WEATHER_API_KEY;
 
 function App() {
-  // interface weatherDataInterface {
-  //   day: string;
-  //   conditions: string;
-  //   maxTempDegC: number;
-  //   windKmH: number;
-  //   hourlyTemp: number[];
-  // }
 
-  type AstroType = {
-    is_moon_up: number;
-    is_sun_up: number;
-    moon_illumination: string;
-    moon_phase: string;
-    moonrise: string;
-    moonset: string;
-    sunrise: string;
-    sunset: string;
-  };
-
-  type DayType = {
-    avghumidity: number;
-    avgtemp_c: number;
-    avgtemp_f: number;
-    avgvis_km: number;
-    avgvis_miles: number;
-    condition: { text: string; icon: string; code: number };
-    daily_chance_of_rain: number;
-    daily_chance_of_snow: number;
-    daily_will_it_rain: number;
-    daily_will_it_snow: number;
-    maxtemp_c: number;
-    maxtemp_f: number;
-    maxwind_kph: number;
-    maxwind_mph: number;
-    mintemp_c: number;
-    mintemp_f: number;
-    totalprecip_in: number;
-    totalprecip_mm: number;
-    totalsnow_cm: number;
-    uv: number;
-  };
-
-  type HourType = {
-    chance_of_rain: number;
-    chance_of_snow: number;
-    cloud: number;
-    condition: { text: string; icon: string; code: number };
-    dewpoint_c: number;
-    dewpoint_f: number;
-    feelslike_c: number;
-    feelslike_f: number;
-    gust_kph: number;
-    gust_mph: number;
-    heatindex_c: number;
-    heatindex_f: number;
-    humidity: number;
-    is_day: number;
-    precip_in: number;
-    precip_mm: number;
-    pressure_in: number;
-    pressure_mb: number;
-    temp_c: number;
-    temp_f: number;
-    time: string;
-    time_epoch: number;
-    uv: number;
-    vis_km: number;
-    vis_miles: number;
-    will_it_rain: number;
-    will_it_snow: number;
-    wind_degree: number;
-    wind_dir: string;
-    wind_kph: number;
-    wind_mph: number;
-    windchill_c: number;
-    windchill_f: number;
-  }[];
-
-  type APIData = {
-    astro: AstroType;
-    date: string;
-    date_epoch: number;
-    day: DayType;
-    hour: HourType;
-  };
-
-  const [forecastData, setForecastData] = useState<APIData[]>([]);
-  const [locationData, setLocationData] = useState<{
-    name: string;
-    region: string;
-    country: string;
-    lat: number;
-    lon: number;
-    tz_id: string;
-    localtime_epoch: number;
-    localtime: string;
-  }>();
+  const [forecastData, setForecastData] = useState<APIData | null>(null);
+  
   const [dateObjectAtStartUp, setDateObjectAtStartUp] = useState<Date>();
   const [todaysDateInLondon, setTodaysDateInLondon] = useState<string>("");
   const [todayDayName, setTodayDayName] = useState<string>("");
@@ -144,6 +49,8 @@ function App() {
     return dayName;
   };
 
+  
+
   const getForecastDataForLocation = async (lat: number, lon: number) => {
     const res = await fetch(
       `http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=7&aqi=no&alerts=no`,
@@ -155,9 +62,8 @@ function App() {
       }
     );
     const data = await res.json();
-    setLocationData(data.location);
-    setForecastData(data.forecast.forecastday);
     console.log(data);
+    setForecastData(data);
   };
 
   const emojis = {
@@ -171,15 +77,20 @@ function App() {
   const [dayName, setDayName] = useState("Monday");
   const [dayHour, setDayHour] = useState(9);
   const [amPm, setAmPm] = useState("am");
-  const [temp, setTemp] = useState(
-    isUseCelcius
-      ? forecastData.map((item: APIData) => item.day.maxtemp_c)
-      : forecastData.map((item: APIData) => item.day.maxtemp_f)
-  );
+  const [temp, setTemp] = useState();
   // console.log(temp)
-  const [wind, setWind] = useState(
-    forecastData.map((item: APIData) => item.day.maxwind_kph)
-  );
+  useEffect(() => {  
+    forecastData?.forecast.forecastday ?
+    (isUseCelcius
+      ? forecastData.forecast.forecastday.map((item: forecastdayType) => item.day.maxtemp_c)
+      : forecastData.forecast.forecastday.map((item: forecastdayType) => item.day.maxtemp_f))
+      : null
+  }, [forecastData])
+  const [wind, setWind] = useState();
+  useEffect(() => {  
+    forecastData ? forecastData.forecast.forecastday.map((item: forecastdayType) => item.day.maxwind_kph) : null
+  }, [forecastData])
+
   useEffect(() => {
     const date = new Date();
     const dayofWeek = date.getDay();
@@ -259,43 +170,9 @@ function App() {
   }, []);
   // const [isTempScaleCelcius, setIsTempScaleCelcius] = useState(true);
 
-  const styles = {
-    celcius: {
-      color: isUseCelcius ? "black" : "#adb1b6",
-    },
-    fahrenheit: {
-      color: isUseCelcius ? "#adb1b6" : "black",
-    },
-  };
+  
 
-  // const handleTempScaleChange = (e: React.MouseEvent<HTMLElement>) => {
-  //   // console.log(e.target);
-  //   if ((e.target as HTMLElement).dataset.name === "fahrenheit") {
-  //     if (isTempScaleCelcius === true) {
-  //       setIsTempScaleCelcius(false);
-  //       setTemp((prevState: number[]) => {
-  //         return prevState.map((item) => {
-  //           return Math.floor((item * 9) / 5 + 32);
-  //         });
-  //       });
-  //     } else {
-  //       return;
-  //     }
-  //   } else {
-  //     if (isTempScaleCelcius !== true) {
-  //       setIsTempScaleCelcius(true);
-  //       setTemp((prevState) => {
-  //         return prevState.map((item: number) => {
-  //           return Math.ceil(((item - 32) * 5) / 9);
-  //         });
-  //       });
-  //     } else {
-  //       return;
-  //     }
-  //   }
-  // };
-
-  const daysWeather = forecastData.map((item, index) => {
+  const daysWeather = forecastData?.forecast.forecastday ? forecastData.forecast.forecastday.map((item: forecastdayType, index: number) => {
     return (
       <div
         key={`${index}`}
@@ -319,7 +196,7 @@ function App() {
         </p>
       </div>
     );
-  });
+  }) : null;
   // console.log(daysWeather)
 
   const [locationNameSearchString, setLocationNameSearchString] =
@@ -410,105 +287,7 @@ function App() {
             );
           })}</div>
         : null}</div>
-      {forecastData.length !== 0 ? (
-        <div className="app-wrapper">
-          <div className="focus-day-section">
-            <p className="focus-day-emoji">
-              {forecastData.length !== 0 ? (
-                <img src={forecastData[currentDataIndex].day.condition.icon} />
-              ) : null}
-            </p>
-            <p>
-              {isUseCelcius
-                ? Math.round(
-                    forecastData[currentDataIndex].hour[currentHourIndex].temp_c
-                  )
-                : Math.round(
-                    forecastData[currentDataIndex].hour[currentHourIndex].temp_f
-                  )}
-            </p>
-            <div className="focus-day-temp-switcher">
-              <p
-                data-name="celcius"
-                onClick={() => setIsUseCelcius((prevState) => !prevState)}
-                style={styles.celcius}
-              >
-                °C
-              </p>
-              <span></span>
-              <p
-                data-name="fahrenheit"
-                onClick={() => setIsUseCelcius((prevState) => !prevState)}
-                style={styles.fahrenheit}
-              >
-                °F
-              </p>
-            </div>
-            <div className="focus-day-more-details">
-              <p>
-                Chance of rain:{" "}
-                {forecastData[currentDataIndex].day.daily_chance_of_rain}%
-              </p>
-              <p>
-                Chance of snow:{" "}
-                {forecastData[currentDataIndex].day.daily_chance_of_snow}%
-              </p>
-              <p>
-                Wind:{" "}
-                {isUseCelcius
-                  ? `${forecastData[currentDataIndex].day.maxwind_kph} km/h`
-                  : `${forecastData[currentDataIndex].day.maxwind_mph} mph`}
-              </p>
-              {isUseCelcius
-                ? forecastData[currentDataIndex].day.maxtemp_c > 35 && (
-                    <p style={{ color: "red", fontWeight: "bold" }}>
-                      Heatwave Warning
-                    </p>
-                  )
-                : forecastData[currentDataIndex].day.maxtemp_f > 95 && (
-                    <p style={{ color: "red", fontWeight: "bold" }}>
-                      Heatwave Warning
-                    </p>
-                  )}
-              {forecastData.length !== 0
-                ? forecastData[currentDataIndex].day.maxwind_kph > 30 && (
-                    <p style={{ color: "orange", fontWeight: "bold" }}>
-                      Strong wind warning
-                    </p>
-                  )
-                : null}
-            </div>
-            <div className="focus-day-summary">
-              <p>{locationData ? locationData.name : "Weather"}</p>
-              <p>
-                {dayName} {dayHour}:00 {amPm}
-              </p>
-              <p>{forecastData[currentDataIndex].day.condition.text}</p>
-            </div>
-          </div>
-          <div className="hourly-temp-section">
-            <p>Hourly Temp</p>
-            {forecastData[currentDataIndex].hour.map((item, index) => {
-              const amPm = index < 12 ? "am" : "pm";
-              const modifiedIndex =
-                index === 0
-                  ? 12
-                  : index === 12
-                  ? 12
-                  : index > 11
-                  ? index - 12
-                  : index;
-              return (
-                <p key={`${item} ${index}`}>
-                  {modifiedIndex} {amPm} -{" "}
-                  {isUseCelcius ? item.temp_c : item.temp_f}°
-                </p>
-              );
-            })}
-          </div>
-          <div className="days-summary-section flex-row">{daysWeather}</div>
-        </div>
-      ) : null}
+      {forecastData ? <LocationWeather forecastData={{...forecastData}} isUseCelcius={isUseCelcius} currentDataIndex={currentDataIndex} currentHourIndex={currentHourIndex}/> : null }
     </div>
   );
 }
