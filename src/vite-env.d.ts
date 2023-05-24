@@ -126,7 +126,4 @@ type AstroType = {
 
 type LocationWeatherPropsType = { 
     forecastData: APIData;
-    isUseCelcius: boolean;
-    currentDataIndex: number;
-    currentHourIndex: number;
 }
