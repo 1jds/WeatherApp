@@ -6,12 +6,48 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
   const [isUseCelcius, setIsUseCelcius] = useState<boolean>(true);
   const [currentHourIndex, setCurrentHourIndex] = useState<number>(0);
   const [currentDataIndex, setCurrentDataIndex] = useState(0);
-  const [dateObjectAtStartUp, setDateObjectAtStartUp] = useState<Date>();
-  const [todaysDateInLondon, setTodaysDateInLondon] = useState<string>("");
-  const [dayName, setDayName] = useState<string>('');
-  const [dayHour, setDayHour] = useState<string>('');
-  const [dayMins, setDayMins] = useState<string>('')
-  const [amPm, setAmPm] = useState<string>('');
+
+  const [dayNumber, setDayNumber] = useState<number>(0);
+  const [dayName, setDayName] = useState<string>("");
+  const [dayHour, setDayHour] = useState<string>("");
+  const [dayMins, setDayMins] = useState<string>("");
+  const [amPm, setAmPm] = useState<string>("");
+  console.log(
+    "dayNumber",
+    dayNumber,
+    "dayName",
+    dayName,
+    "dayHour",
+    dayHour,
+    "dayMins",
+    dayMins,
+    "amPM",
+    amPm
+  );
+
+  const days: string[] = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    // This is two week's worth, otherwise I run off the end of the array when getting the day names for the tiles.
+    // Of course, this problem could be solved in another way, but this works too
+  ];
+
+  const convertTo12HourTime = (num: number): string => {
+    const hourValue = num === 0 ? 12 : num > 12 ? num - 12 : num;
+    return hourValue + "";
+  };
 
   const styles = {
     celcius: {
@@ -23,113 +59,22 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
   };
 
   useEffect(() => {
-    setDayMins(props.forecastData.location.localtime.slice(-2))
-    const date = new Date(props.forecastData.location.localtime);
-    console.log(date)
-    const dayofWeek = date.getDay();
-    console.log(dayofWeek)
-    let dayofWeekName = "Monday";
-    switch (dayofWeek) {
-      case 0:
-        dayofWeekName = "Sunday";
-        break;
-      case 1:
-        dayofWeekName = "Monday";
-        break;
-      case 2:
-        dayofWeekName = "Tuesday";
-        break;
-      case 3:
-        dayofWeekName = "Wednesday";
-        break;
-      case 4:
-        dayofWeekName = "Thursday";
-        break;
-      case 5:
-        dayofWeekName = "Friday";
-        break;
-      case 6:
-        dayofWeekName = "Saturday";
-        break;
-      default:
-        dayofWeekName = "Monday";
-    }
-    setDayName(dayofWeekName);
-
-    const hourofDay = date.getHours();
-    const amPmValue = hourofDay > 11 ? "pm" : "am";
-    let hourValue;
-    switch (hourofDay) {
-      case 0:
-        hourValue = 12;
-        break;
-      case 13:
-        hourValue = 1;
-        break;
-      case 14:
-        hourValue = 2;
-        break;
-      case 15:
-        hourValue = 3;
-        break;
-      case 16:
-        hourValue = 4;
-        break;
-      case 17:
-        hourValue = 5;
-        break;
-      case 18:
-        hourValue = 6;
-        break;
-      case 19:
-        hourValue = 7;
-        break;
-      case 20:
-        hourValue = 8;
-        break;
-      case 21:
-        hourValue = 9;
-        break;
-      case 22:
-        hourValue = 10;
-        break;
-      case 23:
-        hourValue = 11;
-        break;
-      default:
-        hourValue = hourofDay;
-    }
-    setDayHour(hourValue + '');
-    setAmPm(amPmValue);
-  }, [props.forecastData]);
-
-
-  useEffect(() => {
-    const newDate: Date = new Date();
-    setDateObjectAtStartUp(newDate);
-
-    setTodaysDateInLondon(
-      newDate.toLocaleDateString("en-CA", { timeZone: "Europe/London" })
+    const date = new Date(props.forecastData.location.localtime_epoch * 1000);
+    setDayNumber(date.getDay());
+    setDayName(days[date.getDay()]);
+    setCurrentHourIndex(Number(props.forecastData.location.localtime.slice(-5, -3)));
+    setDayHour(
+      convertTo12HourTime(
+        Number(props.forecastData.location.localtime.slice(-5, -3))
+      )
     );
-  }, []);
-
-
-  const getDayName = (date: string): string => {
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const d = new Date(date);
-    const dayName = dateObjectAtStartUp
-      ? days[dateObjectAtStartUp.getDay()]
-      : "Loading";
-    return dayName;
-  };
+    setDayMins(props.forecastData.location.localtime.slice(-2));
+    setAmPm(
+      Number(props.forecastData.location.localtime.slice(-5, -3)) > 11
+        ? "pm"
+        : "am"
+    );
+  }, [props.forecastData]);
 
   const daysWeather = props.forecastData.forecast.forecastday.map(
     (item: forecastdayType, index: number) => {
@@ -137,12 +82,9 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         <div
           key={`${index}`}
           className="day-tile"
-          onClick={() => setCurrentDataIndex(index)}
+          onClick={() => {setCurrentDataIndex(index); setDayName(days[dayNumber + index])}}
         >
-          <p className="day-tile-day">{getDayName(item.date).slice(0, 3)}</p>
-          {/* <p className="day-tile-emoji">
-            {item.day.condition.text}
-          </p> */}
+          <p className="day-tile-day">{days[dayNumber + index].slice(0, 3)}</p>
           <img src={item.day.condition.icon} />
           <p>
             {isUseCelcius
@@ -158,17 +100,7 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
       );
     }
   );
-  // console.log(daysWeather)
 
-  
-
-//   useEffect(() => {
-//     const date = new Date();
-//     setCurrentTime(`${date.getHours()}:${date.getMinutes()}`);
-//     setCurrentHourIndex(date.getHours());
-//   }, []);
-
-  
   return (
     <div className="app-wrapper">
       <div className="focus-day-section">
@@ -176,8 +108,8 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
           {props ? (
             <img
               src={
-                props.forecastData.forecast.forecastday[currentDataIndex]
-                  .day.condition.icon
+                props.forecastData.forecast.forecastday[currentDataIndex].day
+                  .condition.icon
               }
             />
           ) : null}
@@ -185,12 +117,14 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         <p>
           {isUseCelcius
             ? Math.round(
-                props.forecastData.forecast.forecastday[currentDataIndex]
-                  .hour[currentHourIndex].temp_c
+                props.forecastData.forecast.forecastday[currentDataIndex].hour[
+                  currentHourIndex
+                ].temp_c
               )
             : Math.round(
-                props.forecastData.forecast.forecastday[currentDataIndex]
-                  .hour[currentHourIndex].temp_f
+                props.forecastData.forecast.forecastday[currentDataIndex].hour[
+                  currentHourIndex
+                ].temp_f
               )}
         </p>
         <div className="focus-day-temp-switcher">
@@ -214,49 +148,41 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
           <p>
             Chance of rain:{" "}
             {
-              props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.daily_chance_of_rain
+              props.forecastData.forecast.forecastday[currentDataIndex].day
+                .daily_chance_of_rain
             }
             %
           </p>
           <p>
             Chance of snow:{" "}
             {
-              props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.daily_chance_of_snow
+              props.forecastData.forecast.forecastday[currentDataIndex].day
+                .daily_chance_of_snow
             }
             %
           </p>
           <p>
             Wind:{" "}
             {isUseCelcius
-              ? `${
-                  props.forecastData.forecast.forecastday[
-                    currentDataIndex
-                  ].day.maxwind_kph
-                } km/h`
-              : `${
-                  props.forecastData.forecast.forecastday[
-                    currentDataIndex
-                  ].day.maxwind_mph
-                } mph`}
+              ? `${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_kph} km/h`
+              : `${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_mph} mph`}
           </p>
           {isUseCelcius
-            ? props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.maxtemp_c > 35 && (
+            ? props.forecastData.forecast.forecastday[currentDataIndex].day
+                .maxtemp_c > 35 && (
                 <p style={{ color: "red", fontWeight: "bold" }}>
                   Heatwave Warning
                 </p>
               )
-            : props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.maxtemp_f > 95 && (
+            : props.forecastData.forecast.forecastday[currentDataIndex].day
+                .maxtemp_f > 95 && (
                 <p style={{ color: "red", fontWeight: "bold" }}>
                   Heatwave Warning
                 </p>
               )}
           {props
-            ? props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.maxwind_kph > 30 && (
+            ? props.forecastData.forecast.forecastday[currentDataIndex].day
+                .maxwind_kph > 30 && (
                 <p style={{ color: "orange", fontWeight: "bold" }}>
                   Strong wind warning
                 </p>
@@ -265,36 +191,38 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         </div>
         <div className="focus-day-summary">
           <p>{props.forecastData.location.name}</p>
-          <p>{dayName} {dayHour}:{dayMins}{amPm}</p>
+          <p>
+            {dayName} {currentDataIndex === 0 ? `${dayHour}:${dayMins} ${amPm}` : null}
+          </p>
           <p>
             {
-              props.forecastData.forecast.forecastday[currentDataIndex]
-                .day.condition.text
+              props.forecastData.forecast.forecastday[currentDataIndex].day
+                .condition.text
             }
           </p>
         </div>
       </div>
       <div className="hourly-temp-section">
         <p>Hourly Temp</p>
-        {props.forecastData.forecast.forecastday[
-          currentDataIndex
-        ].hour.map((item, index) => {
-          const amPm = index < 12 ? "am" : "pm";
-          const modifiedIndex =
-            index === 0
-              ? 12
-              : index === 12
-              ? 12
-              : index > 11
-              ? index - 12
-              : index;
-          return (
-            <p key={`${item} ${index}`}>
-              {modifiedIndex} {amPm} -{" "}
-              {isUseCelcius ? item.temp_c : item.temp_f}°
-            </p>
-          );
-        })}
+        {props.forecastData.forecast.forecastday[currentDataIndex].hour.map(
+          (item, index) => {
+            const amPm = index < 12 ? "am" : "pm";
+            const modifiedIndex =
+              index === 0
+                ? 12
+                : index === 12
+                ? 12
+                : index > 11
+                ? index - 12
+                : index;
+            return (
+              <p key={`${item} ${index}`}>
+                {modifiedIndex} {amPm} -{" "}
+                {isUseCelcius ? item.temp_c : item.temp_f}°
+              </p>
+            );
+          }
+        )}
       </div>
       <div className="days-summary-section flex-row">{daysWeather}</div>
     </div>
