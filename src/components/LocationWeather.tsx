@@ -62,7 +62,9 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
     const date = new Date(props.forecastData.location.localtime_epoch * 1000);
     setDayNumber(date.getDay());
     setDayName(days[date.getDay()]);
-    setCurrentHourIndex(Number(props.forecastData.location.localtime.slice(-5, -3)));
+    setCurrentHourIndex(
+      Number(props.forecastData.location.localtime.slice(-5, -3))
+    );
     setDayHour(
       convertTo12HourTime(
         Number(props.forecastData.location.localtime.slice(-5, -3))
@@ -82,7 +84,10 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         <div
           key={`${index}`}
           className="day-tile"
-          onClick={() => {setCurrentDataIndex(index); setDayName(days[dayNumber + index])}}
+          onClick={() => {
+            setCurrentDataIndex(index);
+            setDayName(days[dayNumber + index]);
+          }}
         >
           <p className="day-tile-day">{days[dayNumber + index].slice(0, 3)}</p>
           <img src={item.day.condition.icon} />
@@ -105,14 +110,12 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
     <div className="app-wrapper">
       <div className="focus-day-section">
         <p className="focus-day-emoji">
-          {props ? (
-            <img
-              src={
-                props.forecastData.forecast.forecastday[currentDataIndex].day
-                  .condition.icon
-              }
-            />
-          ) : null}
+          <img
+            src={
+              props.forecastData.forecast.forecastday[currentDataIndex].day
+                .condition.icon
+            }
+          />
         </p>
         <p>
           {isUseCelcius
@@ -146,26 +149,22 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         </div>
         <div className="focus-day-more-details">
           <p>
-            Chance of rain:{" "}
-            {
-              props.forecastData.forecast.forecastday[currentDataIndex].day
-                .daily_chance_of_rain
-            }
-            %
+            Chance of rain:
+            {` 
+            ${props.forecastData.forecast.forecastday[currentDataIndex].day.daily_chance_of_rain}
+            %`}
           </p>
           <p>
-            Chance of snow:{" "}
-            {
-              props.forecastData.forecast.forecastday[currentDataIndex].day
-                .daily_chance_of_snow
-            }
-            %
+            Chance of snow:
+            {`
+            ${props.forecastData.forecast.forecastday[currentDataIndex].day.daily_chance_of_snow}
+            %`}
           </p>
           <p>
-            Wind:{" "}
+            Wind:
             {isUseCelcius
-              ? `${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_kph} km/h`
-              : `${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_mph} mph`}
+              ? ` ${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_kph} km/h`
+              : ` ${props.forecastData.forecast.forecastday[currentDataIndex].day.maxwind_mph} mph`}
           </p>
           {isUseCelcius
             ? props.forecastData.forecast.forecastday[currentDataIndex].day
@@ -192,7 +191,8 @@ export default function LocationWeather(props: LocationWeatherPropsType) {
         <div className="focus-day-summary">
           <p>{props.forecastData.location.name}</p>
           <p>
-            {dayName} {currentDataIndex === 0 ? `${dayHour}:${dayMins} ${amPm}` : null}
+            {dayName}{" "}
+            {currentDataIndex === 0 ? `${dayHour}:${dayMins} ${amPm}` : null}
           </p>
           <p>
             {
